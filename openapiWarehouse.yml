@@ -1,0 +1,236 @@
+openapi: 3.0.4
+info:
+  title: Warehouse - OpenAPI 3.0
+  description: OpenAPI-спецификация для работы со складом товаров магазина Х
+  version: 0.0.0
+servers:
+  - url: https://warehouse.swagger.io/api/v3
+tags:
+  - name: product
+    description: Операции с товарами
+paths:
+  /product/{sku}:
+    delete:
+      tags:
+        - product
+      summary: Удаление товара
+      description: Удаление товара, имеющегося на складе, по его артикулу
+      operationId: deleteProduct
+      parameters:
+        - name: sku
+          in: path
+          description: Артикул товара, который необходимо удалить
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]{8}$'
+      responses:
+        '200':
+          description: Товар удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Описание результата ответа
+        '400':
+          description: Некорректный формат артикула
+        '404':
+          description: Артикул не найден
+    patch:
+      tags:
+        - product
+      summary: Изменение количества товара
+      description: Изменить остаток товара на складе по его артикулу
+      operationId: updateProductQuantity
+      parameters:
+        - name: sku
+          in: path
+          description: Артикул товара, количество которого необходимо изменить
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9]{8}$'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  format: int32
+                  description: Количество товара на складе
+                  minimum: 0
+              required:
+                - quantity
+      responses:
+        '200':
+          description: Количество товара изменено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Описание результата ответа
+        '400':
+          description: Некорректный запрос
+        '404':
+          description: Артикул не найден
+        '500':
+          description: Непредвиденная ошибка
+  /product:
+    post:
+      tags:
+        - product
+      summary: Добавление нового товара
+      description: Добавление нового товара при его поступлении на склад
+      operationId: addProduct
+      requestBody:
+        description: Передаются атрибуты товара
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        '200':
+          description: Товар добавлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Описание результата ответа
+                  sku:
+                    type: string
+                    pattern: '^[0-9]{8}$'
+                    description: Артикул созданного товара
+                required:
+                  - sku
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка добавления товара
+  /products/search:
+    post:
+      tags:
+        - product
+      summary: Расширенный поиск товаров
+      description: Позволяет искать товары по категории, подкатегории, полу
+      operationId: searchProduct
+      requestBody:
+        description: Передаются атрибуты поиска товара
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchProduct'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchProduct'
+        '400':
+          description: Некорректный запрос: отсутствуют атрибуты поиска
+        '404':
+          description: Ничего не найдено
+        '500':
+          description: Непредвиденная ошибка
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - gender
+        - productSubtype
+        - color
+        - size
+        - price
+      properties:
+        gender:
+          type: string
+          description: пол, где ж - женский, м - мужской, у - унисекс
+          example: 'ж'
+          enum: [ 'ж', 'м', 'у' ]
+        productSubtype:
+          type: string
+          description: подтип, где TSH - футболка, TRO - брюки, SHO - шорты, SNK - кроссовки
+          example: 'TRO'
+          enum: [ 'TSH', 'TRO', 'SHO', 'SNK' ]
+        color:
+          type: string
+          description: цвет, где RED - красный, BLU - синий, GRN - зеленый
+          example: 'RED'
+          enum: [ 'RED', 'BLU', 'GRN' ]
+        size:
+          type: string
+          description: размер товара
+          example: 'XS'
+          enum: [ 'XS', 'S', 'M', 'L', 'XL', '36', '37', '38', '39', '40', '41', '42', '43' ]
+        price:
+          type: number
+          format: double
+          description: стоимость
+          minimum: 0
+          example: 1234.56
+        quantity:
+          type: integer
+          format: int32
+          description: количество товара на складе
+          minimum: 0
+          example: 10
+          default: 0
+    SearchProduct:
+      type: object
+      properties:
+        gender:
+          type: string
+          description: пол, где ж - женский, м - мужской, у - унисекс
+          example: 'ж'
+          enum: [ 'ж', 'м', 'у' ]
+        productSubtype:
+          type: string
+          description: подтип, где TSH - футболка, TRO - брюки, SHO - шорты, SNK - кроссовки
+          example: 'TRO'
+          enum: [ 'TSH', 'TRO', 'SHO', 'SNK' ]
+        color:
+          type: string
+          description: цвет, где RED - красный, BLU - синий, GRN - зеленый
+          example: 'RED'
+          enum: [ 'RED', 'BLU', 'GRN' ]
+        size:
+          type: string
+          description: размер товара
+          example: 'XS'
+          enum: [ 'XS', 'S', 'M', 'L', 'XL', '36', '37', '38', '39', '40', '41', '42', '43' ]
+        sku:
+          type: string
+          pattern: '^[0-9]{8}$'
+          description: Артикул
+          example: '78357296'
+        productType:
+          type: string
+          description: тип, где CL - одежда, SH - обувь
+          example: 'CL'
+          enum: [ 'CL', 'SH' ]
+        price:
+          type: number
+          format: double
+          description: стоимость
+          minimum: 0
+          example: 1234.56
+        isAvailable:
+          type: boolean
+          description: Признак, что товар в наличии (true - есть, false - нет)
+          example: true
