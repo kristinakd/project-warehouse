@@ -18,3 +18,7 @@
 - Python 3.9
 - Flask
 - PostgreSQL
+
+## Ссылка на Swagger Editor
+https://editor.swagger.io/?url=https://raw.githubusercontent.com/kristinakd/project-warehouse/main/openapiWarehouse.yml
+
