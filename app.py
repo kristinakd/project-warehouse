@@ -116,21 +116,30 @@ def add_product():
             cursor.execute("SELECT id FROM clothing_size WHERE code = %s", (size,))
             clothing_size_id = cursor.fetchone()[0]
 
-            # Определение типа изделия
-            cursor.execute("SELECT product_type_id FROM product_subtype WHERE code = %s", (product_subtype,))
-            product_type_id = cursor.fetchone()[0]
-
-            # Определяем type_size_gender_id
-            cursor.execute(
-                "SELECT id FROM type_size_gender WHERE product_type_id = %s AND gender_id = %s AND clothing_size_id = %s",
-                (product_type_id, gender_id, clothing_size_id))
-            type_size_gender_id = cursor.fetchone()[0]
+            # Определяем subtype_size_gender_id
+            with conn.cursor() as cursor:
+                # Проверяем наличие записи subtype_size_gender
+                cursor.execute("""
+                    SELECT id FROM subtype_size_gender
+                    WHERE product_subtype_id = %s AND gender_id = %s AND clothing_size_id = %s
+                """, (product_subtype_id, gender_id, clothing_size_id))
+                result = cursor.fetchone()
+            # Если такая комбинация в subtype_size_gender не найдена - добавляем в БД
+            if result:
+                subtype_size_gender_id = result[0]
+            else:
+                cursor.execute("""
+                    INSERT INTO subtype_size_gender (product_subtype_id, gender_id, clothing_size_id)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                """, (product_subtype_id, gender_id, clothing_size_id))
+                subtype_size_gender_id = cursor.fetchone()[0]
 
             # Добавление товара
             cursor.execute("""
-                INSERT INTO product (sku, type_size_gender_id, color_id, product_subtype_id, price, quantity)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (sku, type_size_gender_id, color_id, product_subtype_id, price, quantity))
+                INSERT INTO product (sku, subtype_size_gender_id, color_id, price, quantity)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (sku, subtype_size_gender_id, color_id, price, quantity))
             conn.commit()
             return jsonify({"message": "Товар успешно добавлен", "sku": sku}), 200
     except Exception:
