@@ -35,10 +35,10 @@ CREATE TABLE clothing_size (
     code VARCHAR(5) UNIQUE NOT NULL -- 'XS', 'S', 'M', 'L', 'XL', '36'...'44'
 );
 
--- таблица связка тип + пол + размер
-CREATE TABLE type_size_gender (
+-- таблица связка подтип + пол + размер
+CREATE TABLE subtype_size_gender (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    product_type_id UUID NOT NULL REFERENCES product_type(id),
+    product_subtype_id UUID NOT NULL REFERENCES product_subtype(id),
     gender_id UUID NOT NULL REFERENCES gender(id),
     clothing_size_id UUID NOT NULL REFERENCES clothing_size(id)
 );
@@ -50,7 +50,6 @@ CREATE TABLE product (
     name VARCHAR(50),      -- название товара
     price NUMERIC(12, 2) NOT NULL,  -- стоимость
     quantity INT NOT NULL,             -- количество
-    type_size_gender_id UUID NOT NULL REFERENCES type_size_gender(id),
-    color_id UUID NOT NULL REFERENCES color(id),
-    product_subtype_id UUID NOT NULL REFERENCES product_subtype(id)
+    subtype_size_gender_id UUID NOT NULL REFERENCES subtype_size_gender(id),
+    color_id UUID NOT NULL REFERENCES color(id)
 );
